@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -13,8 +14,14 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
-	vars := r.URL.Query()
-	message := vars.Get("msg")
+	decoder := json.NewDecoder(r.Body)
+	var auth Auth
+	err := decoder.Decode(&auth)
+	if err != nil {
+		panic(err)
+	}
 
-	json.NewEncoder(w).Encode(map[string]string{"message": message})
+	fmt.Print(auth)
+
+	json.NewEncoder(w).Encode(map[string]string{"username": auth.Username})
 }

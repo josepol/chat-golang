@@ -19,10 +19,12 @@ func setupMySQL() {
 	}
 	defer db.Close()
 
-	insert, err := db.Query("INSERT INTO auth VALUES (1, 'josepol', '123123')")
+	/*uuid, _ := uuid.NewRandom()
+
+	insert, err := db.Query("INSERT INTO auth VALUES (?, 'asdasdasd', '123123')", uuid)
 
 	if err != nil {
 		panic(err.Error())
 	}
-	defer insert.Close()
+	defer insert.Close()*/
 }
