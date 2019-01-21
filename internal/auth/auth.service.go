@@ -2,6 +2,7 @@ package auth
 
 import (
 	"api/internal/database"
+	routestruct "api/internal/route/struct"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -35,7 +36,8 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if err.(*mysql.MySQLError).Number == database.DuplicatedError {
-			json.NewEncoder(w).Encode("duplicated")
+			var errorMessage = routestruct.ErrorMessage{Status: "ERR", Message: "DUPLICATED"}
+			json.NewEncoder(w).Encode(errorMessage)
 		} else {
 			json.NewEncoder(w).Encode(err.Error())
 		}
@@ -44,6 +46,6 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print(dbStatus)
 
-	json.NewEncoder(w).Encode(map[string]string{"username": auth.Username})
+	json.NewEncoder(w).Encode(map[string]string{"status": "OK"})
 
 }
