@@ -2,7 +2,7 @@ package auth
 
 import (
 	"api/internal/database"
-	routestruct "api/internal/route/struct"
+	model "api/internal/model"
 	"encoding/json"
 	"net/http"
 
@@ -11,7 +11,7 @@ import (
 )
 
 var auth Auth
-var statusResponse routestruct.StatusResponse
+var statusResponse model.StatusResponse
 
 func login(w http.ResponseWriter, r *http.Request) {
 
@@ -66,7 +66,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 	if registerErr != nil {
 		if registerErr.(*mysql.MySQLError).Number == database.DuplicatedError {
-			statusResponse = routestruct.StatusResponse{Status: "01", Message: "User already registered"}
+			statusResponse = model.StatusResponse{Status: "01", Message: "User already registered"}
 		} else {
 			statusResponse = getGenericError()
 		}
@@ -79,14 +79,14 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func getGenericError() routestruct.StatusResponse {
-	return routestruct.StatusResponse{Status: "02", Message: "There has been an error"}
+func getGenericError() model.StatusResponse {
+	return model.StatusResponse{Status: "02", Message: "There has been an error"}
 }
 
-func getGenericSuccess() routestruct.StatusResponse {
-	return routestruct.StatusResponse{Status: "02", Message: "Operation has been succeded"}
+func getGenericSuccess() model.StatusResponse {
+	return model.StatusResponse{Status: "02", Message: "Operation has been succeded"}
 }
 
-func responseJSON(w http.ResponseWriter, statusResponse routestruct.StatusResponse) {
+func responseJSON(w http.ResponseWriter, statusResponse model.StatusResponse) {
 	json.NewEncoder(w).Encode(statusResponse)
 }

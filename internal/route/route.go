@@ -11,10 +11,7 @@ import (
 	auth "api/internal/auth"
 )
 
-func init() {
-}
-
-// Config routing
+// Config API routing
 func Config() {
 	router := mux.NewRouter()
 	router = auth.Config(router)

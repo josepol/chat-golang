@@ -1,4 +1,4 @@
-package routestruct
+package model
 
 // ErrorMessage Struct returned on API error responses
 type StatusResponse struct {
