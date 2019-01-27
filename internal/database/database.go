@@ -13,11 +13,15 @@ var (
 )
 
 // ConfigDatabase Connect to MySQL Database
-func ConfigDatabase() {
+func OpenDBConnection() {
 	var err error
 	DB, err = sql.Open("mysql", "root:root@tcp(127.0.0.1:3306)/golang")
 	if err != nil {
 		panic(err.Error())
 	}
-	// defer DB.Close()
+}
+
+// CloseDatabase Close database connection
+func CloseDBConnection() {
+	defer DB.Close()
 }

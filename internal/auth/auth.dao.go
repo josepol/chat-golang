@@ -5,8 +5,6 @@ import (
 	"database/sql"
 )
 
-func init() {}
-
 func loginDao(auth Auth) (*sql.Rows, error) {
 	query, err := database.DB.Query("SELECT id, username, password FROM auth WHERE username = ? AND password = ?", auth.Username, auth.Password)
 	return query, err

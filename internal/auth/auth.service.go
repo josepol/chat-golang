@@ -4,7 +4,6 @@ import (
 	"api/internal/database"
 	routestruct "api/internal/route/struct"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/go-sql-driver/mysql"
@@ -16,8 +15,9 @@ var statusResponse routestruct.StatusResponse
 
 func login(w http.ResponseWriter, r *http.Request) {
 
-	authFound := Auth{}
+	database.OpenDBConnection()
 
+	authFound := Auth{}
 	decoder := json.NewDecoder(r.Body)
 	decodeErr := decoder.Decode(&auth)
 
@@ -43,23 +43,23 @@ func login(w http.ResponseWriter, r *http.Request) {
 		authFound.Password = password
 	}
 
-	statusResponse = routestruct.StatusResponse{Status: "02", Message: fmt.Sprintf("%b", authFound.ID)}
-	responseJSON(w, statusResponse)
+	database.CloseDBConnection()
+	json.NewEncoder(w).Encode(authFound)
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
+
+	database.OpenDBConnection()
 
 	var uuidErr error
 	var registerErr error
 
 	decoder := json.NewDecoder(r.Body)
 	decodeErr := decoder.Decode(&auth)
-
 	auth.ID, uuidErr = uuid.NewUUID()
 
 	if uuidErr != nil || decodeErr != nil {
-		statusResponse = routestruct.StatusResponse{Status: "02", Message: "There has been an error"}
-		responseJSON(w, statusResponse)
+		responseJSON(w, getGenericError())
 	}
 
 	_, registerErr = registerDao(auth)
@@ -68,18 +68,23 @@ func register(w http.ResponseWriter, r *http.Request) {
 		if registerErr.(*mysql.MySQLError).Number == database.DuplicatedError {
 			statusResponse = routestruct.StatusResponse{Status: "01", Message: "User already registered"}
 		} else {
-			statusResponse = routestruct.StatusResponse{Status: "02", Message: "There has been an error"}
+			statusResponse = getGenericError()
 		}
 	} else {
-		statusResponse = routestruct.StatusResponse{Status: "00", Message: "The registering operation has been succeded"}
+		statusResponse = getGenericSuccess()
 	}
 
+	database.CloseDBConnection()
 	responseJSON(w, statusResponse)
 
 }
 
 func getGenericError() routestruct.StatusResponse {
 	return routestruct.StatusResponse{Status: "02", Message: "There has been an error"}
+}
+
+func getGenericSuccess() routestruct.StatusResponse {
+	return routestruct.StatusResponse{Status: "02", Message: "Operation has been succeded"}
 }
 
 func responseJSON(w http.ResponseWriter, statusResponse routestruct.StatusResponse) {
