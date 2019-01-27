@@ -5,9 +5,11 @@ import (
 	model "api/internal/model"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 )
@@ -18,7 +20,6 @@ var statusResponse model.StatusResponse
 func login(w http.ResponseWriter, r *http.Request) {
 
 	database.OpenDBConnection()
-
 	authFound := Auth{}
 	decoder := json.NewDecoder(r.Body)
 	decodeErr := decoder.Decode(&auth)
@@ -56,17 +57,17 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	jwt := generateJWT()
+
 	database.CloseDBConnection()
-	json.NewEncoder(w).Encode(authFound)
+	json.NewEncoder(w).Encode(jwt)
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
 
 	database.OpenDBConnection()
-
 	var uuidErr error
 	var registerErr error
-
 	decoder := json.NewDecoder(r.Body)
 	decodeErr := decoder.Decode(&auth)
 	auth.ID, uuidErr = uuid.NewUUID()
@@ -77,7 +78,6 @@ func register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	hashedPassword, passwordCryptErr := bcrypt.GenerateFromPassword([]byte(auth.Password), bcrypt.DefaultCost)
-
 	auth.Password = string(hashedPassword)
 
 	if passwordCryptErr != nil {
@@ -93,13 +93,19 @@ func register(w http.ResponseWriter, r *http.Request) {
 		} else {
 			statusResponse = getGenericError()
 		}
-	} else {
-		statusResponse = getGenericSuccess()
+		responseJSON(w, statusResponse)
+		return
 	}
 
-	database.CloseDBConnection()
-	responseJSON(w, statusResponse)
+	jwt := generateJWT()
 
+	database.CloseDBConnection()
+	responseJSON(w, model.StatusResponse{Status: "token", Message: jwt})
+
+}
+
+func test(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(model.StatusResponse{Status: "00", Message: "OK"})
 }
 
 func getGenericError() model.StatusResponse {
@@ -112,4 +118,20 @@ func getGenericSuccess() model.StatusResponse {
 
 func responseJSON(w http.ResponseWriter, statusResponse model.StatusResponse) {
 	json.NewEncoder(w).Encode(statusResponse)
+}
+
+func generateJWT() string {
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := make(jwt.MapClaims)
+	claims["exp"] = time.Now().Add(time.Hour * 2).Unix()
+	claims["iat"] = time.Now().Unix()
+	claims["id"] = auth.ID
+	token.Claims = claims
+	tokenString, jwtSignedErr := token.SignedString([]byte("privateKey123"))
+
+	if jwtSignedErr != nil {
+		panic(jwtSignedErr)
+	}
+
+	return tokenString
 }
