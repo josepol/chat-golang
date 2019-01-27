@@ -11,8 +11,8 @@ import (
 	auth "api/internal/auth"
 )
 
-// Config API routing
-func Config() {
+// ConfigAPIRouting API routing
+func ConfigAPIRouting() {
 	router := mux.NewRouter()
 	router = auth.Config(router)
 	router.HandleFunc("/auth/test/{msg}", testConnection).Methods("GET")

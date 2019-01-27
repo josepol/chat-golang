@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	route.Config()
+	route.ConfigAPIRouting()
 }

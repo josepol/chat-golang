@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 )
@@ -23,12 +25,14 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 	if decodeErr != nil {
 		responseJSON(w, getGenericError())
+		return
 	}
 
 	rows, loginErr := loginDao(auth)
 
 	if loginErr != nil {
 		responseJSON(w, getGenericError())
+		return
 	}
 
 	for rows.Next() {
@@ -37,10 +41,19 @@ func login(w http.ResponseWriter, r *http.Request) {
 		selectedUserErr := rows.Scan(&id, &username, &password)
 		if selectedUserErr != nil {
 			responseJSON(w, getGenericError())
+			return
 		}
 		authFound.ID = id
 		authFound.Username = username
 		authFound.Password = password
+	}
+
+	passwordErr := bcrypt.CompareHashAndPassword([]byte(authFound.Password), []byte(auth.Password))
+
+	if passwordErr != nil {
+		statusResponse = model.StatusResponse{Status: "03", Message: "Login failed"}
+		responseJSON(w, statusResponse)
+		return
 	}
 
 	database.CloseDBConnection()
@@ -60,6 +73,16 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 	if uuidErr != nil || decodeErr != nil {
 		responseJSON(w, getGenericError())
+		return
+	}
+
+	hashedPassword, passwordCryptErr := bcrypt.GenerateFromPassword([]byte(auth.Password), bcrypt.DefaultCost)
+
+	auth.Password = string(hashedPassword)
+
+	if passwordCryptErr != nil {
+		responseJSON(w, getGenericError())
+		return
 	}
 
 	_, registerErr = registerDao(auth)
