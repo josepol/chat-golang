@@ -9,13 +9,18 @@ import (
 	"github.com/gorilla/mux"
 
 	auth "api/internal/auth"
+	"api/internal/chat"
 )
 
 // ConfigAPIRouting API routing
 func ConfigAPIRouting() {
 	router := mux.NewRouter()
 	router = auth.Config(router)
+	router = chat.Config(router)
 	router.HandleFunc("/auth/test/{msg}", testConnection).Methods("GET")
+
+	fs := http.FileServer(http.Dir("../../public"))
+	http.Handle("/", fs)
 
 	headersOk, originOk, methodOk := headers()
 	log.Fatal(http.ListenAndServe(":3001", handlers.CORS(originOk, headersOk, methodOk)(router)))
