@@ -2,10 +2,10 @@ package chat
 
 import (
 	"api/internal/socket"
-	"encoding/json"
 	"log"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -16,8 +16,6 @@ var upgrader = websocket.Upgrader{
 
 func socketRoute(w http.ResponseWriter, r *http.Request) {
 	log.Print("Starting chat socket...")
-
-	socket.ConfigSocket()
 
 	go handleMessages()
 
@@ -38,19 +36,20 @@ func socketRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	defer conn.Close()
+	var id uuid.UUID
+	id, _ = uuid.NewUUID()
 
-	socket.Clients[conn] = true
+	socket.Clients[id] = conn
+	log.Print(socket.Clients)
+
+	defer conn.Close()
 
 	for {
 		var message socket.Message
 		err := conn.ReadJSON(&message)
 		if err != nil {
-			log.Printf("Socket error %v", err)
-			if e, ok := err.(*json.SyntaxError); ok {
-				log.Printf("syntax error at byte offset %d", e.Offset)
-			}
-			// delete(socket.Clients, conn)
+			log.Printf("ReadJSON socket error %v", err)
+			delete(socket.Clients, id)
 		}
 		socket.Broadcast <- message
 	}
@@ -60,12 +59,13 @@ func socketRoute(w http.ResponseWriter, r *http.Request) {
 func handleMessages() {
 	for {
 		msg := <-socket.Broadcast
-		for client := range socket.Clients {
-			err := client.WriteJSON(msg)
+		log.Print(len(socket.Clients))
+		for key, clientConn := range socket.Clients {
+			err := clientConn.WriteJSON(msg)
 			if err != nil {
-				log.Printf("Socket error %v", err)
-				client.Close()
-				delete(socket.Clients, client)
+				log.Printf("WriteJSON socket error %v", err)
+				clientConn.Close()
+				delete(socket.Clients, key)
 			}
 		}
 	}
