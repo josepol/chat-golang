@@ -2,6 +2,7 @@ package chat
 
 import (
 	"api/internal/socket"
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -20,17 +21,24 @@ func socketRoute(w http.ResponseWriter, r *http.Request) {
 
 	go handleMessages()
 
+	/*if r.Header.Get("Origin") != "http://"+r.Host {
+		log.Print(r.Header.Get("Origin"))
+		log.Print(r.Host)
+		http.Error(w, "Origin not allowed", 403)
+		return
+	}*/
+
+	upgrader.CheckOrigin = func(r *http.Request) bool {
+		return true
+	}
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	upgrader.CheckOrigin = func(r *http.Request) bool {
-		return true
-	}
-
-	// defer conn.Close()
+	defer conn.Close()
 
 	socket.Clients[conn] = true
 
@@ -39,7 +47,10 @@ func socketRoute(w http.ResponseWriter, r *http.Request) {
 		err := conn.ReadJSON(&message)
 		if err != nil {
 			log.Printf("Socket error %v", err)
-			delete(socket.Clients, conn)
+			if e, ok := err.(*json.SyntaxError); ok {
+				log.Printf("syntax error at byte offset %d", e.Offset)
+			}
+			// delete(socket.Clients, conn)
 		}
 		socket.Broadcast <- message
 	}

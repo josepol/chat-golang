@@ -1,25 +1,47 @@
 <html>
-    <head></head>
-    <body>
-        <h1>Sockets!</h1>
-        <button onclick="send()">Send</button>
-    </body>
-</html>
+<head>
+    <title>WebSocket demo</title>
+</head>
+<body>
 
-<script>
-    var socket = new WebSocket("ws://localhost:3001/chat/socket");
-    this.socket.addEventListener('message', function(e) {
-        var msg = JSON.parse(e.data)
-        console.log(msg);
-    })
+    <div>
+        <form>
+            <label for="numberfield">Number</label>
+            <input type="text" id="numberfield" placeholder="12"/><br />
+            <button type="button" id="sendBtn">Send</button>
+        </form>
+    </div>
+    <div id="container"></div>
 
-    function send() {
-        console.log('asdasd');
-        this.socket.send({
-            email: 'asdasd',
-            username: 'user',
-            message: 'asdasdasd'
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            var ws;
+            if (window.WebSocket === undefined) {
+                $("#container").append("Your browser does not support WebSockets");
+                return;
+            } else {
+                ws = initWS();
+            }
+            function initWS() {
+                var socket = new WebSocket("ws://localhost:3001/chat/socket"),
+                    container = $("#container")
+                socket.onopen = function() {
+                    container.append("<p>Socket is open</p>");
+                };
+                socket.onmessage = function (e) {
+                    container.append("<p> Got some shit:" + e.data + "</p>");
+                }
+                socket.onclose = function () {
+                    container.append("<p>Socket closed</p>");
+                }
+                return socket;
+            }
+            $("#sendBtn").click(function (e) {
+                e.preventDefault();
+                ws.send(JSON.stringify({ Num: parseInt($("#numberfield").val()) }));
+            });
         });
-    }
-
-</script>
+    </script>
+</body>
+</html>
