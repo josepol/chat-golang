@@ -52,7 +52,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	passwordErr := bcrypt.CompareHashAndPassword([]byte(authFound.Password), []byte(auth.Password))
 
 	if passwordErr != nil {
-		statusResponse = model.StatusResponse{Status: "03", Message: "Login failed"}
+		statusResponse = model.StatusResponse{Status: "3", Message: "Login failed"}
 		responseJSON(w, statusResponse)
 		return
 	}
@@ -89,7 +89,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 	if registerErr != nil {
 		if registerErr.(*mysql.MySQLError).Number == database.DuplicatedError {
-			statusResponse = model.StatusResponse{Status: "01", Message: "User already registered"}
+			statusResponse = model.StatusResponse{Status: "1", Message: "User already registered"}
 		} else {
 			statusResponse = getGenericError()
 		}
@@ -100,7 +100,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	jwt := generateJWT()
 
 	database.CloseDBConnection()
-	responseJSON(w, model.StatusResponse{Status: "token", Message: jwt})
+	responseJSON(w, model.StatusResponse{Status: "0", Message: jwt})
 
 }
 
@@ -109,11 +109,11 @@ func test(w http.ResponseWriter, r *http.Request) {
 }
 
 func getGenericError() model.StatusResponse {
-	return model.StatusResponse{Status: "02", Message: "There has been an error"}
+	return model.StatusResponse{Status: "2", Message: "There has been an error"}
 }
 
 func getGenericSuccess() model.StatusResponse {
-	return model.StatusResponse{Status: "02", Message: "Operation has been succeded"}
+	return model.StatusResponse{Status: "2", Message: "Operation has been succeded"}
 }
 
 func responseJSON(w http.ResponseWriter, statusResponse model.StatusResponse) {

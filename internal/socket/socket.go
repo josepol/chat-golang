@@ -1,8 +1,6 @@
 package socket
 
 import (
-	"log"
-
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
@@ -16,7 +14,6 @@ var (
 
 // ConfigSocket configure chat socket
 func ConfigSocket() {
-	log.Print("CVonfig madafasasasas")
 	Clients = make(map[uuid.UUID]*websocket.Conn)
 	Broadcast = make(chan Message)
 }

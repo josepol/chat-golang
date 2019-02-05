@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 
 	auth "api/internal/auth"
 	"api/internal/chat"
@@ -22,14 +23,15 @@ func ConfigAPIRouting() {
 	fs := http.FileServer(http.Dir("../../public"))
 	http.Handle("/", fs)
 
-	headersOk, originOk, methodOk := headers()
-	log.Fatal(http.ListenAndServe(":3001", handlers.CORS(originOk, headersOk, methodOk)(router)))
+	// headersOk, originOk, methodOk := headers()
+	handler := cors.Default().Handler(router)
+	log.Fatal(http.ListenAndServe(":3001" /*handlers.CORS(originOk, headersOk, methodOk)*/, handler))
 }
 
 func headers() (handlers.CORSOption, handlers.CORSOption, handlers.CORSOption) {
-	headersOk := handlers.AllowedHeaders([]string{"Authorization"})
+	headersOk := handlers.AllowedHeaders([]string{"Authorization", "X-Requested-With"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
-	methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
 	return headersOk, originsOk, methodsOk
 }
