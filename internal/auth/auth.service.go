@@ -60,7 +60,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 	jwt := generateJWT()
 
 	database.CloseDBConnection()
-	json.NewEncoder(w).Encode(jwt)
+	statusResponse = model.StatusResponse{Status: "0", Message: jwt}
+	responseJSON(w, statusResponse)
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
