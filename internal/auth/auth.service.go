@@ -4,6 +4,7 @@ import (
 	"api/internal/database"
 	model "api/internal/model"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
+	"github.com/gorilla/context"
 )
 
 var auth Auth
@@ -105,8 +107,30 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func test(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(model.StatusResponse{Status: "00", Message: "OK"})
+func username(w http.ResponseWriter, r *http.Request) {
+	database.OpenDBConnection()
+	var username string
+	userID := context.Get(r, "userID")
+	fmt.Print(userID)
+
+	userIDString, _ := userID.(string)
+
+	rows, err := getUsername(userIDString)
+
+	if err != nil {
+		responseJSON(w, getGenericError())
+		return
+	}
+
+	for rows.Next() {
+		selectedUserErr := rows.Scan(&username)
+		if selectedUserErr != nil {
+			responseJSON(w, getGenericError())
+			return
+		}
+	}
+
+	json.NewEncoder(w).Encode(model.StatusResponse{Status: "00", Message: username})
 }
 
 func getGenericError() model.StatusResponse {

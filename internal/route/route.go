@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 
@@ -23,17 +22,17 @@ func ConfigAPIRouting() {
 	fs := http.FileServer(http.Dir("../../public"))
 	http.Handle("/", fs)
 
-	// headersOk, originOk, methodOk := headers()
 	handler := cors.Default().Handler(router)
-	log.Fatal(http.ListenAndServe(":3001" /*handlers.CORS(originOk, headersOk, methodOk)*/, handler))
-}
 
-func headers() (handlers.CORSOption, handlers.CORSOption, handlers.CORSOption) {
-	headersOk := handlers.AllowedHeaders([]string{"Authorization", "X-Requested-With"})
-	originsOk := handlers.AllowedOrigins([]string{"*"})
-	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedHeaders: []string{"*"},
+	})
 
-	return headersOk, originsOk, methodsOk
+	// Insert the middleware
+	handler = c.Handler(handler)
+
+	log.Fatal(http.ListenAndServe(":3001", handler))
 }
 
 func testConnection(w http.ResponseWriter, r *http.Request) {

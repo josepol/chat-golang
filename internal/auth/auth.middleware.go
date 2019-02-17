@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/context"
 )
 
 func withMiddleware(next http.HandlerFunc) http.HandlerFunc {
@@ -19,8 +20,8 @@ func withMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		})
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			fmt.Println(claims["id"])
-			log.Printf("User id is %s", claims["id"])
+			log.Print(claims["id"])
+			context.Set(r, "userID", claims["id"])
 		} else {
 			fmt.Println(err)
 		}
